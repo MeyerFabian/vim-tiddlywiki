@@ -3,17 +3,14 @@
 " Maintainer: Devin Weaver <suki@tritarget.org>
 " License: http://www.apache.org/licenses/LICENSE-2.0.txt
 
-" Only do this when not done yet for this buffer
-if exists("b:did_ftplugin")
-  finish
-endif
-let b:did_ftplugin = 1
-
 let s:save_cpo = &cpo
 set cpo-=C
 
+" *.md.meta -> *.md jump
+nnoremap <leader>ec :e %:p:r:r.md<CR>
+
 function! TiddlyWikiTime()
-  return system("date -u +'%Y%m%d%H%M%S'")[:-2] . "000"
+  return strftime('%Y%m%d%H%M%S')
 endfunction
 
 function! s:UpdateModifiedTime()
@@ -35,20 +32,18 @@ function! s:InitializeTemplate()
   call append(1, "created: " . timestamp)
   call append(2, "modifier: ")
   call append(3, "creator: ")
-  call append(4, "title: ")
+  call append(4, "title: " . expand('%:t:r:r'))
   call append(5, "tags: ")
-  call append(6, "")
+  call append(6, "type: text/x-markdown")
 endfunction
 
-if exists("g:tiddlywiki_autoupdate")
-  augroup tiddlywiki
-    au BufWrite, *.tid call <SID>AutoUpdateModifiedTime()
-  augroup END
+if line('$') == 1 && getline(1) == ''
+  call s:InitializeTemplate()
 endif
 
-if !exists("g:tiddlywiki_no_mappings")
-  nmap <Leader>tm :call <SID>UpdateModifiedTime()<Cr>
-  nmap <Leader>tt :call <SID>InitializeTemplate()<Cr>
-endif
+augroup tiddlywiki
+  au!
+  au BufWrite <buffer> call <SID>AutoUpdateModifiedTime()
+augroup END
 
 let &cpo = s:save_cpo
